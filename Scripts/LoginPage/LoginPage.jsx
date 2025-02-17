@@ -4,7 +4,7 @@ import useUserStore from "../State/userStore.js";
 
 const LoginPage = () => {
 	const navigate = useNavigate();
-	const setAccessToken = useUserStore(state => state.setAccessToken);
+	const {setAccessToken} = useUserStore();
 
 	const login = async (jsonData) => {
 		const response = await fetch("/api/login", {

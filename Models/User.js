@@ -6,7 +6,9 @@ const userSchema = new mongoose.Schema({
 	email: {type: String, required: true},
 	password: {type: String, required: true},
 	createdAt: {type: Date, default: Date.now},
-	refreshToken: {type: String}
+	refreshTokens: {type: [String], default: []},
+	socketId: {type: String, default: null},
+	pendingMessages: {type: [Object], default: []}
 });
 
 userSchema.pre("save", async function(next) {
@@ -20,8 +22,8 @@ userSchema.pre("save", async function(next) {
 	}
 });
 
-userSchema.methods.comparePassword = function(enteredPassword) {
-	return bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.comparePassword = async function(enteredPassword) {
+	return await bcrypt.compare(enteredPassword, this.password);
 }
 
 const User = mongoose.model("User", userSchema);

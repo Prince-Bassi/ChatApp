@@ -2,6 +2,7 @@ import express from "express";
 import User from "./Models/User.js";
 import jsonwebtoken from "jsonwebtoken";
 import axios from "axios";
+import bcrypt from "bcrypt";
 
 const router = express.Router();
 
@@ -53,12 +54,12 @@ router.post("/login", async (req, res, next) => {
 		const {accessToken, refreshToken} = generateTokens(user);
 		res.cookie("refreshToken", refreshToken, {
 			httpOnly: true,
-			secure: true,
+			secure: false,
 			sameSite: "Strict",
 			maxAge: 7 * 24 * 60 * 60 * 1000
 		});
 
-		user.refreshToken = refreshToken;
+		user.refreshTokens.push(refreshToken);
 		await user.save();
 
 		res.status(200).json({success: true, message: `Logged in as ${user.name}`, accessToken});
@@ -77,10 +78,10 @@ router.post("/logout", async (req, res, next) => {
         	const token = cookies?.refreshToken;
 		res.clearCookie("refreshToken", {
 			httpOnly: true,
-			secure: true,
+			secure: false,
 			sameSite: "Strict"
 		});
-		await User.updateOne({refreshToken: token}, {refreshToken: null});
+		await User.updateOne({refreshTokens: token}, {$pull: {refreshTokens: token}});
 		res.status(200).json({success: true, message: "Logged out"});
 	}
 	catch (err) {
@@ -112,7 +113,7 @@ router.post("/refreshAccessToken", async (req, res, next) => {
 	if (!token) return res.status(403).json({success: false, message: "No refresh token"});
 
 	try {
-		const user = await User.findOne({refreshToken: token});
+		const user = await User.findOne({refreshTokens: token});
 		if (!user) return res.status(403).json({success: false, message: "No user found"});
 
 		const decoded = jsonwebtoken.verify(token, process.env.JWT_REFRESH_KEY);
@@ -121,12 +122,12 @@ router.post("/refreshAccessToken", async (req, res, next) => {
 		const {accessToken, refreshToken} = generateTokens(user);
 		res.cookie("refreshToken", refreshToken, {
 			httpOnly: true,
-			secure: true,
+			secure: false,
 			sameSite: "Strict",
 			maxAge: 7 * 24 * 60 * 60 * 1000
 		});
 
-		user.refreshToken = refreshToken;
+		user.refreshTokens.push(refreshToken);
 		await user.save();
 
 		res.status(200).json({success: true, message: `Logged in as ${user.name}`, accessToken});

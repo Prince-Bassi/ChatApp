@@ -6,12 +6,14 @@ import {useNavigate, Link} from "react-router-dom";
 
 const Home = () => {
        const navigate = useNavigate();
-       const accessToken = useUserStore(state => state.accessToken);
-       const setAccessToken = useUserStore(state => state.setAccessToken);
-       const updateUserData = useUserStore(state => state.updateUserData);
-
-       const userName = useUserStore(state => state.userName);
-       const userEmail = useUserStore(state => state.userEmail);
+       const {
+              accessToken,
+              setAccessToken,
+              updateUserData,
+              userName,
+              userEmail,
+              connectSocket
+       } = useUserStore();
 
        const [loading, setLoading] = useState(true);
 
@@ -59,6 +61,12 @@ const Home = () => {
                      setLoading(false);
               }
        }, []);
+
+       useEffect(() => {
+              if (!userEmail) return;
+
+              connectSocket(userEmail);
+       }, [userEmail]);
 
        if (loading) {
               return <div>Loading...</div>

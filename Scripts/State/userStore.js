@@ -1,9 +1,13 @@
 import {create} from "zustand";
+import {io} from "socket.io-client";
 
 const useUserStore = create((set, get) => ({
 	accessToken: "",
 	userName: "",
 	userEmail: "",
+	socket: null,
+
+	connectSocket: (email) => set({socket: io(location.href, {auth: {email}})}),
 
 	updateUserData: async () => {
 		const state = get();
